@@ -24,7 +24,7 @@
         </nav>
 
         <h1><img src="<?php echo get_stylesheet_directory_uri() ?>/img/rest.png" alt="Rest"></h1>
-
+    
         <p>Rua Marechal 29 – Copacabana – Rj</p>
         <p class="telefone">2422-9201</p>
     </header>
