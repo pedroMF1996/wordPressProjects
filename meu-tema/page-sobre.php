@@ -7,12 +7,15 @@
 			<h2 class="subtitulo"><?php the_title(); ?></h2>
 
 			<div class="grid-8">
-				<img src="<?php echo get_stylesheet_directory_uri(); ?>/img/rest-fachada.jpg" alt="Fachada do Rest">
+				<?php 
+					$image=wp_get_attachment_image_src(get_field('fotoRest_id'),'medium')[0];
+				?>
+				<img src="<?php echo $image; ?>" alt="Fachada do Rest">
 			</div>
 
 			<div class="grid-8">
 				<h2>História</h2>
-				<p><?php echo get_post_meta(get_the_ID(), 'historia', true)?></p>
+				<p><?php the_field('historia') ?></p>
 				<p>Gostaria de enfatizar que o desenvolvimento contínuo de distintas formas de atuação prepara-nos para enfrentar situações atípicas decorrentes do remanejamento dos quadros funcionais.</p>
 				<h2>Visão</h2>
 				<p>Não obstante, a expansão dos mercados mundiais faz parte de um processo de gerenciamento de alternativas às soluções ortodoxas.</p>
