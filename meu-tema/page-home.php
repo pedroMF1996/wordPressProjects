@@ -11,27 +11,22 @@
 				<!-- <h2><?php echo get_post_meta(get_the_ID(), 'comida', true)?></h2> -->
 				<h2><?php the_field('comida')?></h2>
 				<ul>
+					<?php
+						$pratos = get_field('pratos');
+						if (isset($pratos)){
+							foreach ($pratos as $prato){
+					?>
 					<li>
-						<span><sup>R$</sup>129</span>
+						<span><sup>R$</sup><?php echo $prato['preco'] ?></span>
 						<div>
-							<h3>Salmão Grelhado no Forno</h3>
-							<p>Pequenas tiras de salmão feitas no alho e óleo</p>
+							<h3><?php echo $prato['nome'] ?></h3>
+							<p><?php echo $prato['descricao'] ?></p>
 						</div>
 					</li>
-					<li>
-						<span><sup>R$</sup>89</span>
-						<div>
-							<h3>Sardinha Frita na Cerveja</h3>
-							<p>Sardinhas escolhidas a dedo e fritas em cerveja premium</p>
-						</div>
-					</li>
-					<li>
-						<span><sup>R$</sup>159</span>
-						<div>
-							<h3>Camarão com Catupiry</h3>
-							<p>Grandes camarões grelhados, servidos ao molho de camarão com catupiry</p>
-						</div>
-					</li>
+					<?php 
+							}
+						}
+					?>
 				</ul>
 			</div>
 

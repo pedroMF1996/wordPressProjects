@@ -37,6 +37,36 @@ function cmb2_fields_home() {
         'name' => 'Descrição',
         'type' => 'textarea'
     ]);
+
+    $comidas = $cmb->add_field([
+        'name'=>'Pratos',
+        'id'=>'pratos',
+        'type' => 'group',
+        'reapeatable' => true,
+        'options'=>[
+            'group_title'=>'Prato {#}',
+            'add_button'=>'Adicionar Prato',
+            'sortable'=>true
+        ]
+    ]);
+    
+    $cmb->add_group_field($comidas, [
+        'id'=>'nome',
+        'name'=>'Nome',
+        'type'=>'text'
+    ]);
+
+    $cmb->add_group_field($comidas, [
+        'id'=>'descricao',
+        'name'=>'Descrição',
+        'type'=>'textarea',
+    ]);
+
+    $cmb->add_group_field($comidas, [
+        'id'=>'preco',
+        'name'=>'Preço',
+        'type'=>'text',
+    ]);
 }
 
 add_action('cmb2_admin_init', 'cmb2_fields_home');
