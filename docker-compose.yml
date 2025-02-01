@@ -1,42 +1,26 @@
 services:
   wordpress:
-    image: wordpress:php8.2-fpm
+    image: wordpress:latest
     container_name: wordpress-container
+    ports:
+      - "8080:80"
     environment:
-      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_HOST: mysql:3306
       WORDPRESS_DB_NAME: wpdb
       WORDPRESS_DB_USER: wpuser
       WORDPRESS_DB_PASSWORD: wppass
-      WORDPRESS_DEBUG: 1
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     volumes:
       - wordpress-data:/var/www/html
-      - wordpress-uploads:/var/www/html/wp-content/uploads
-      - wordpress-cache:/var/www/html/wp-content/cache
       - "./meu-plugin:/var/www/html/wp-content/plugins/meu-plugin"
       - "./meu-tema:/var/www/html/wp-content/themes/meu-tema"
-    networks:
-      - wordpress-network
-
-  nginx:
-    image: nginx:alpine
-    container_name: nginx-container
-    ports:
-      - "8080:80"
-    volumes:
-      - wordpress-data:/var/www/html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - wordpress
     networks:
       - wordpress-network
 
   mysql:
     image: mysql:5.7
     container_name: mysql-container
-    command: --default-authentication-plugin=mysql_native_password --skip-ssl
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: wpdb
@@ -44,13 +28,6 @@ services:
       MYSQL_PASSWORD: wppass
     ports:
       - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "wpuser", "-pwppass"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - wordpress-network
 
@@ -68,10 +45,4 @@ networks:
 
 volumes:
   wordpress-data:
-    driver: local
-  wordpress-uploads:
-    driver: local
-  wordpress-cache:
-    driver: local
-  mysql-data:
     driver: local
