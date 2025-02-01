@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# WordPress files
+wp-content/uploads/
+wp-content/cache/
+
+# Logs
+*.log
+
+# Docker volumes
+mysql-data/
+mysql-logs/
