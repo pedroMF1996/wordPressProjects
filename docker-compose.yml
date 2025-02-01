@@ -32,6 +32,8 @@ services:
       - wordpress-data:/var/www/html
       - "./meu-plugin:/var/www/html/wp-content/plugins/meu-plugin"
       - "./meu-tema:/var/www/html/wp-content/themes/meu-tema"
+      - "./uploads:/var/www/html/wp-content/uploads"
+    user: "www-data:www-data"
     networks:
       - wordpress-network
 

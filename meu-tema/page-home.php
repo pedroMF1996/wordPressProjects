@@ -8,7 +8,8 @@
 			<h2 class="subtitulo"><?php the_title(); ?></h2>
 
 			<div class="menu-item grid-8">
-				<h2>Peixes</h2>
+				<!-- <h2><?php echo get_post_meta(get_the_ID(), 'comida', true)?></h2> -->
+				<h2><?php the_field('comida')?></h2>
 				<ul>
 					<li>
 						<span><sup>R$</sup>129</span>
