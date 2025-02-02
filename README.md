@@ -1,137 +1,187 @@
-# WordPress Projects
+# WordPress Docker Development Environment
 
-Este é um ambiente de desenvolvimento WordPress completo usando Docker, com suporte para desenvolvimento de temas e plugins personalizados.
+Ambiente de desenvolvimento WordPress otimizado usando Docker, com suporte a múltiplos projetos, alocação dinâmica de portas e proteção contra conflitos com jogos e outras aplicações.
 
-## Estrutura do Projeto
+## 🚀 Início Rápido
+
+1. Clone o repositório:
+   ```powershell
+   git clone <repository-url>
+   cd wordPressProjects
+   ```
+
+2. Inicie um novo projeto:
+   ```powershell
+   # Usando o nome da pasta atual
+   .\start-project.ps1
+
+   # OU especificando um nome personalizado
+   .\start-project.ps1 -ProjectName "meu-blog"
+   ```
+
+3. Acesse seu projeto:
+   - WordPress: http://localhost:<porta> (mostrada ao final da execução)
+   - Adminer: http://localhost:<porta> (mostrada ao final da execução)
+
+## 🛡️ Proteção de Portas
+
+O sistema inclui proteção inteligente contra conflitos de portas com:
+
+### 🎮 Plataformas de Jogos
+- Steam (incluindo Remote Play)
+- Epic Games Store
+- Battle.net
+- Origin
+- Ubisoft Connect
+- GOG Galaxy
+- Xbox Game Pass
+- PlayStation Network
+- Nintendo Switch Online
+
+### 🎯 Jogos Populares
+- Minecraft (Java e Bedrock)
+- League of Legends
+- Valorant
+- Counter-Strike
+- Dota 2
+- Overwatch
+- Fortnite
+
+### 🔌 Serviços de Jogos
+- Voice chat
+- Matchmaking
+- Servidores dedicados
+- P2P networking
+- Comunicação em tempo real
+
+### 🖥️ Outros Serviços
+- Bancos de dados (MySQL, PostgreSQL, MongoDB)
+- Serviços web (HTTP, HTTPS)
+- IDEs e ferramentas de desenvolvimento
+- Serviços de sistema
+
+## 🛠️ Estrutura do Projeto
 
 ```
 wordPressProjects/
-├── docker-compose.yml    # Configuração dos containers Docker
-├── .env                  # Variáveis de ambiente
-├── meu-tema/            # Diretório do tema personalizado
-├── meu-plugin/          # Diretório do plugin personalizado
-└── uploads/             # Diretório para uploads do WordPress
+├── meu-tema/           # Seus temas personalizados
+├── meu-plugin/         # Seus plugins personalizados
+├── uploads/            # Arquivos de mídia do WordPress
+├── .env.development    # Template para ambiente de desenvolvimento
+├── .env.production     # Template para ambiente de produção
+├── docker-compose.yml  # Configuração dos containers
+└── start-project.ps1   # Script de inicialização
 ```
 
-## Pré-requisitos
+## 📋 Pré-requisitos
 
-- Docker Desktop instalado e em execução
-- Docker Compose instalado
+- Docker Desktop para Windows
+- PowerShell 5.1 ou superior
 - Git (opcional, para versionamento)
 
-## Configuração Inicial
+## 🔧 Configuração
 
-1. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+### Arquivos de Ambiente
 
-```env
-WORDPRESS_PORT=8080
-WORDPRESS_DB_NAME=wordpress
-WORDPRESS_DB_USER=wordpress
-WORDPRESS_DB_PASSWORD=wordpress_password
+1. `.env.development`: Template para desenvolvimento local
+   - Base para novos projetos
+   - **NÃO EDITE** diretamente, é usado como template
 
-MYSQL_ROOT_PASSWORD=somewordpress
-MYSQL_DATABASE=wordpress
-MYSQL_USER=wordpress
-MYSQL_PASSWORD=wordpress_password
-MYSQL_PORT=3306
-MYSQL_MEMORY_LIMIT=1G
-MYSQL_MEMORY_RESERVATION=500M
+2. `.env.production`: Template para produção
+   - Use para deploy em produção
+   - Ajuste senhas e configurações antes do uso
 
-ADMINER_PORT=8888
-```
+3. `.env`: Arquivo de configuração ativo
+   - Gerado automaticamente pelo script
+   - **NÃO EDITE** manualmente
 
-2. Crie os diretórios necessários:
+### Script de Inicialização
+
+O script `start-project.ps1` possui as seguintes opções:
 
 ```powershell
-mkdir meu-tema
-mkdir meu-plugin
-mkdir uploads
+.\start-project.ps1 [-ProjectName <nome>] [-Help]
+
+Parâmetros:
+  -ProjectName   Nome do projeto (ex: meu-blog)
+                Se omitido, usa o nome da pasta atual
+  -Help         Mostra a ajuda
 ```
 
-## Iniciando o Ambiente
+### 🔄 Sistema de Portas Dinâmicas
 
-1. Abra o terminal na pasta do projeto
+O sistema de alocação de portas:
+1. Verifica portas em uso por jogos e aplicações
+2. Identifica serviços que usam cada porta
+3. Encontra automaticamente portas disponíveis
+4. Evita conflitos com:
+   - Portas de sistema (<1024)
+   - Portas reservadas
+   - Ranges dinâmicos de jogos
+   - Serviços em execução
 
-2. Inicie os containers:
+### Containers e Nomes
+
+Cada projeto terá seus próprios containers com nomes únicos:
+- `<projeto>-wordpress`: Servidor WordPress
+- `<projeto>-mysql`: Banco de dados MySQL 8.0
+- `<projeto>-adminer`: Interface do Adminer
+
+## 📦 Volumes
+
+Cada projeto mantém seus dados em volumes Docker separados:
+- `<projeto>_wordpress-data`: Arquivos do WordPress
+- `<projeto>_mysql_data`: Dados do MySQL
+- `<projeto>_mysql_logs`: Logs do MySQL
+
+## 🔐 Segurança
+
+- Senhas padrão apenas para desenvolvimento
+- Use `.env.production` com senhas fortes para produção
+- Arquivos `.env` são ignorados pelo Git
+- Proteção contra conflitos de porta
+- Validação de nomes de projeto
+
+## 🚀 Desenvolvimento
+
+1. **Temas Personalizados**:
+   - Coloque seus temas na pasta `meu-tema/`
+   - Serão montados automaticamente em `wp-content/themes/`
+
+2. **Plugins Personalizados**:
+   - Coloque seus plugins na pasta `meu-plugin/`
+   - Serão montados automaticamente em `wp-content/plugins/`
+
+3. **Uploads**:
+   - Arquivos de mídia são persistidos na pasta `uploads/`
+   - Montados automaticamente em `wp-content/uploads/`
+
+## 🐛 Depuração
+
+O ambiente de desenvolvimento inclui:
+- WordPress Debug Mode ativado
+- Log de erros habilitado
+- Display de erros ativado
+- Mensagens detalhadas sobre portas em uso
+
+## 📝 Logs
+
+- Logs do WordPress: `wp-content/debug.log`
+- Logs do MySQL: Volume `mysql_logs`
+- Logs do Docker: `docker logs <container-name>`
+
+## 🔄 Comandos Úteis
+
 ```powershell
-docker-compose up -d
-```
+# Ver status dos containers
+docker ps
 
-3. Aguarde alguns segundos até todos os serviços estarem prontos
+# Ver logs de um container
+docker logs <projeto>-wordpress
 
-## Acessando os Serviços
-
-- WordPress: http://localhost:8080
-- Adminer (gerenciador do banco de dados): http://localhost:8888
-  - Sistema: MySQL
-  - Servidor: mysql
-  - Usuário: wordpress
-  - Senha: wordpress_password
-  - Banco de dados: wordpress
-
-## Desenvolvimento
-
-### Tema Personalizado
-- Coloque os arquivos do seu tema na pasta `meu-tema/`
-- O tema estará disponível para ativação no painel do WordPress
-
-### Plugin Personalizado
-- Coloque os arquivos do seu plugin na pasta `meu-plugin/`
-- O plugin estará disponível para ativação no painel do WordPress
-
-### Uploads
-- Os arquivos enviados através do WordPress serão armazenados na pasta `uploads/`
-
-## Comandos Úteis
-
-### Iniciar os containers
-```powershell
-docker-compose up -d
-```
-
-### Parar os containers
-```powershell
+# Parar todos os containers
 docker-compose down
+
+# Remover todos os dados
+docker-compose down -v
 ```
-
-### Ver logs dos containers
-```powershell
-docker-compose logs
-```
-
-### Reiniciar um serviço específico
-```powershell
-docker-compose restart wordpress
-```
-
-## Solução de Problemas
-
-### Problemas de Permissão
-Se encontrar problemas de permissão ao fazer upload de arquivos:
-1. Verifique se a pasta `uploads/` existe na raiz do projeto
-2. Reinicie os containers com `docker-compose down` seguido de `docker-compose up -d`
-
-### Problemas de Conexão com o Banco de Dados
-1. Verifique se as credenciais no arquivo `.env` estão corretas
-2. Confirme se o container do MySQL está rodando: `docker-compose ps`
-3. Verifique os logs do MySQL: `docker-compose logs mysql`
-
-## Backup
-
-### Banco de Dados
-Para fazer backup do banco de dados:
-```powershell
-docker exec mysql-container mysqldump -u wordpress -pwordpress_password wordpress > backup.sql
-```
-
-### Arquivos
-Os arquivos importantes já estão em seu sistema local nas pastas:
-- `meu-tema/`
-- `meu-plugin/`
-- `uploads/`
-
-## Segurança
-
-- Altere todas as senhas no arquivo `.env` antes de usar em produção
-- Nunca compartilhe seu arquivo `.env` com credenciais reais
-- Mantenha o Docker e todas as imagens atualizadas
