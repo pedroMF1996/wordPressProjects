@@ -1,3 +1,5 @@
+name: bikecraft-wordpress
+
 services:
   wordpress:
     image: wordpress:latest
@@ -97,13 +99,13 @@ volumes:
     driver: local
   mysql-data:
     driver: local
-    name: wordpress_mysql_data
+    name: ${COMPOSE_PROJECT_NAME}_mysql_data
     labels:
       com.mysql.description: "MySQL Data Volume"
       com.mysql.environment: "development"
   mysql-logs:
     driver: local
-    name: wordpress_mysql_logs
+    name: ${COMPOSE_PROJECT_NAME}_mysql_logs
     labels:
       com.mysql.description: "MySQL Logs Volume"
       com.mysql.environment: "development"
