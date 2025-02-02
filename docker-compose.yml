@@ -1,9 +1,11 @@
-name: bikecraft-wordpress
+# Nome do projeto - será substituído pelo valor de COMPOSE_PROJECT_NAME
+name: ${COMPOSE_PROJECT_NAME}
 
 services:
+  # Serviço WordPress - Container principal
   wordpress:
     image: wordpress:latest
-    container_name: wordpress-container
+    container_name: ${COMPOSE_PROJECT_NAME}-wordpress
     restart: unless-stopped
     ports:
       - "${WORDPRESS_PORT}:80"
@@ -12,100 +14,78 @@ services:
       WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
       WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
       WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
-      WORDPRESS_DEBUG: 1
+      WORDPRESS_DEBUG: 1  # Ativa modo debug
       WORDPRESS_CONFIG_EXTRA: |
-        define('WP_DEBUG_LOG', true);
-        define('WP_DEBUG_DISPLAY', true);
+        # Configurações adicionais do wp-config.php
+        define('WP_DEBUG_LOG', true);      # Ativa log de debug
+        define('WP_DEBUG_DISPLAY', true);  # Mostra erros na tela
     depends_on:
       mysql:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 1m
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     volumes:
+      # Volume para persistência dos arquivos do WordPress
       - wordpress-data:/var/www/html
-      - "./meu-plugin:/var/www/html/wp-content/plugins/meu-plugin"
-      - "./meu-tema:/var/www/html/wp-content/themes/meu-tema"
-      - "./uploads:/var/www/html/wp-content/uploads"
-    user: "www-data:www-data"
+      # Montagem do tema personalizado
+      - ./meu-tema:/var/www/html/wp-content/themes/meu-tema
+      # Montagem do plugin personalizado
+      - ./meu-plugin:/var/www/html/wp-content/plugins/meu-plugin
+      # Montagem da pasta de uploads
+      - ./uploads:/var/www/html/wp-content/uploads
     networks:
       - wordpress-network
 
+  # Serviço MySQL - Banco de dados
   mysql:
-    image: mysql:5.7
-    container_name: mysql-container
+    image: mysql:8.0
+    container_name: ${COMPOSE_PROJECT_NAME}-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "${MYSQL_PORT}:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "--password=${MYSQL_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    volumes:
+      # Volume para dados do MySQL
+      - mysql_data:/var/lib/mysql
+      # Volume para logs do MySQL
+      - mysql_logs:/var/log/mysql
     deploy:
       resources:
         limits:
           memory: ${MYSQL_MEMORY_LIMIT}
         reservations:
           memory: ${MYSQL_MEMORY_RESERVATION}
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - mysql-logs:/var/log/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+    ports:
+      - "${MYSQL_PORT}:3306"
     networks:
       - wordpress-network
 
+  # Serviço Adminer - Interface web para o banco de dados
   adminer:
-    image: adminer
-    container_name: adminer-container
+    image: adminer:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-adminer
     restart: unless-stopped
     ports:
       - "${ADMINER_PORT}:8080"
     depends_on:
-      mysql:
-        condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      - mysql
     networks:
       - wordpress-network
 
+# Volumes persistentes
+volumes:
+  wordpress-data:  # Armazena arquivos do WordPress
+    name: ${COMPOSE_PROJECT_NAME}_wordpress-data
+  mysql_data:      # Armazena dados do MySQL
+    name: ${COMPOSE_PROJECT_NAME}_mysql_data
+  mysql_logs:      # Armazena logs do MySQL
+    name: ${COMPOSE_PROJECT_NAME}_mysql_logs
+
+# Rede isolada para comunicação entre containers
 networks:
   wordpress-network:
-    driver: bridge
-
-volumes:
-  wordpress-data:
-    driver: local
-  mysql-data:
-    driver: local
-    name: ${COMPOSE_PROJECT_NAME}_mysql_data
-    labels:
-      com.mysql.description: "MySQL Data Volume"
-      com.mysql.environment: "development"
-  mysql-logs:
-    driver: local
-    name: ${COMPOSE_PROJECT_NAME}_mysql_logs
-    labels:
-      com.mysql.description: "MySQL Logs Volume"
-      com.mysql.environment: "development"
+    name: ${COMPOSE_PROJECT_NAME}_wordpress-network
