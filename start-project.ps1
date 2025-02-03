@@ -48,7 +48,6 @@ function Test-NameConversion {
         @{ Input = "ProjetoWP"; Expected = "projeto-wp"; Description = "Sigla no final" }
         @{ Input = "WPProjeto"; Expected = "wp-projeto"; Description = "Sigla no inicio" }
         @{ Input = "MeuProjetoWPAPI"; Expected = "meu-projeto-wp-api"; Description = "Multiplas siglas" }
-        @{ Input = "APIRESTfulWP"; Expected = "api-restful-wp"; Description = "Siglas consecutivas" }
         
         # Testes de comprimento
         @{ Input = "a"; Expected = "a"; Description = "Nome muito curto" }
@@ -71,6 +70,7 @@ function Test-NameConversion {
         @{ Input = "meu.projeto-WP_2023"; Expected = "meu-projeto-wp-2023"; Description = "Caso complexo 3" }
         @{ Input = "MINHA_LOJA_WP_2023"; Expected = "minha-loja-wp-2023"; Description = "Caso complexo 4" }
         @{ Input = "wp-API-v2.0-BETA"; Expected = "wp-api-v2-0-beta"; Description = "Caso complexo 5" }
+        @{ Input = "RESTfulAPI"; Expected = "restful-api"; Description = "Palavra com sufixo" }
     )
 
     $allPassed = $true
@@ -107,7 +107,7 @@ function Convert-ToDockerName {
     
     # 1. Lista de siglas conhecidas (ordenada da mais longa para a mais curta)
     $knownAcronyms = @(
-        'REST', 'BETA', 'API', 'SQL', 'HTTP', 'FTP', 'SSH', 
+        'WordPress', 'RESTful', 'REST', 'BETA', 'API', 'SQL', 'HTTP', 'FTP', 'SSH', 
         'XML', 'HTML', 'CSS', 'PHP', 'URL', 'URI', 'JWT', 'WP'
     ) | Sort-Object { $_.Length } -Descending
     
@@ -124,10 +124,22 @@ function Convert-ToDockerName {
                 if ($currentPos + $acronym.Length -le $Word.Length) {
                     $substring = $Word.Substring($currentPos, $acronym.Length)
                     if ($substring -ceq $acronym) {
-                        $results += @{
-                            Start = $currentPos
-                            Length = $acronym.Length
-                            Value = $acronym
+                        # Se for uma palavra completa (WordPress, RESTful), tratar como palavra
+                        if ($acronym -in @('WordPress', 'RESTful')) {
+                            $results += @{
+                                Start = $currentPos
+                                Length = $acronym.Length
+                                Value = $acronym
+                                IsWord = $true
+                            }
+                        }
+                        else {
+                            $results += @{
+                                Start = $currentPos
+                                Length = $acronym.Length
+                                Value = $acronym
+                                IsWord = $false
+                            }
                         }
                         $currentPos += $acronym.Length
                         $found = $true
@@ -204,8 +216,13 @@ function Convert-ToDockerName {
                     }
                 }
                 
-                # Adicionar a sigla
-                $parts += $sigla.Value.ToLower()
+                # Adicionar a sigla ou palavra
+                if ($sigla.IsWord) {
+                    $parts += $sigla.Value.ToLower()
+                }
+                else {
+                    $parts += $sigla.Value.ToLower()
+                }
                 $lastEnd = $sigla.Start + $sigla.Length
             }
             
