@@ -5,27 +5,40 @@ param(
     [switch]$Debug
 )
 
-function Write-InfoMessage {
-    param([string]$Message)
-    Write-Host $Message -ForegroundColor Cyan
+if (-not [string]::IsNullOrEmpty($ProjectName) -and -not ($ProjectName -match '^[a-zA-Z0-9-]+$')) {
+    Write-ErrorMessage "Nome do projeto '$ProjectName' contém caracteres inválidos"
+    Write-ErrorMessage "Use apenas:"
+    Write-ErrorMessage "- Letras (a-z, A-Z)"
+    Write-ErrorMessage "- Números (0-9)"
+    Write-ErrorMessage "- Hífens (-)"
+    Write-ErrorMessage "Exemplos válidos: meu-blog, loja-virtual, loja-virtual2"
+    exit 1
 }
 
-function Write-SuccessMessage {
-    param([string]$Message)
-    Write-Host $Message -ForegroundColor Green
+# Importar módulos
+Import-Module "$PSScriptRoot\modules\Logging.psm1"
+Import-Module "$PSScriptRoot\modules\DockerUtils.psm1"
+Import-Module "$PSScriptRoot\modules\PortUtils.psm1"
+
+# Configurações globais
+$script:Config = @{
+    TestPrefix = "test-"
+    DefaultStartPort = 8000
+    MaxPortAttempts = 100
+    KnownAcronyms = @(
+        'WordPress', 'RESTful', 'REST', 'BETA', 'API', 'SQL', 'HTTP', 'FTP', 'SSH', 
+        'XML', 'HTML', 'CSS', 'PHP', 'URL', 'URI', 'JWT', 'WP'
+    )
+    RESERVED_PORTS = @{
+        'HTTP' = @(80, 8080)
+        'HTTPS' = @(443, 8443)
+        'MySQL' = @(3306)
+        'PostgreSQL' = @(5432)
+        'Redis' = @(6379)
+        'MongoDB' = @(27017)
+    }
 }
 
-function Write-ErrorMessage {
-    param([string]$Message)
-    Write-Host $Message -ForegroundColor Red
-}
-
-function Write-WarningMessage {
-    param([string]$Message)
-    Write-Host $Message -ForegroundColor Yellow
-}
-
-# Funcoes de teste de nome
 function Test-NameConversion {
     Write-InfoMessage "Testando conversao de nomes..."
 
@@ -106,10 +119,7 @@ function Convert-ToDockerName {
     }
     
     # 1. Lista de siglas conhecidas (ordenada da mais longa para a mais curta)
-    $knownAcronyms = @(
-        'WordPress', 'RESTful', 'REST', 'BETA', 'API', 'SQL', 'HTTP', 'FTP', 'SSH', 
-        'XML', 'HTML', 'CSS', 'PHP', 'URL', 'URI', 'JWT', 'WP'
-    ) | Sort-Object { $_.Length } -Descending
+    $knownAcronyms = $script:Config.KnownAcronyms | Sort-Object { $_.Length } -Descending
     
     # 2. Função para encontrar siglas em uma palavra
     function Find-Siglas {
@@ -292,8 +302,8 @@ function Validate-Port {
     }
     
     # Se a porta está na lista de portas reservadas para o serviço específico
-    if ($script:RESERVED_PORTS.ContainsKey($ServiceName)) {
-        $ports = $script:RESERVED_PORTS[$ServiceName]
+    if ($script:Config.RESERVED_PORTS.ContainsKey($ServiceName)) {
+        $ports = $script:Config.RESERVED_PORTS[$ServiceName]
         if ($Port -in $ports) {
             Write-InfoMessage "Porta $Port e usada por $ServiceName"
             $reserved = $true
@@ -305,9 +315,9 @@ function Validate-Port {
     }
     
     # Se a porta está na lista de portas reservadas para qualquer outro serviço
-    foreach ($service in $script:RESERVED_PORTS.Keys) {
+    foreach ($service in $script:Config.RESERVED_PORTS.Keys) {
         if ($service -ne $ServiceName) {
-            $ports = $script:RESERVED_PORTS[$service]
+            $ports = $script:Config.RESERVED_PORTS[$service]
             if ($Port -in $ports) {
                 Write-InfoMessage "Porta $Port e usada por $service"
                 Write-InfoMessage "Porta $Port esta reservada para outro servico"
@@ -322,16 +332,6 @@ function Validate-Port {
         Reserved = $reserved
         Valid = $valid
     }
-}
-
-# Definir portas reservadas globalmente
-$script:RESERVED_PORTS = @{
-    'HTTP' = @(80, 8080)
-    'HTTPS' = @(443, 8443)
-    'MySQL' = @(3306)
-    'PostgreSQL' = @(5432)
-    'Redis' = @(6379)
-    'MongoDB' = @(27017)
 }
 
 function Test-Environment {
@@ -787,7 +787,7 @@ function Test-DockerOperations {
     }
 
     # Prefixo único para todos os recursos deste teste
-    $testPrefix = "test-$(Get-Random)"
+    $testPrefix = $script:Config.TestPrefix
     
     try {
         # Limpa recursos antigos que possam ter ficado de testes anteriores
@@ -1183,8 +1183,8 @@ function Test-PortRange {
 function Test-ReservedPort {
     param([int]$Port)
     
-    foreach ($service in $RESERVED_PORTS.Keys) {
-        $reservedPorts = $RESERVED_PORTS[$service]
+    foreach ($service in $script:Config.RESERVED_PORTS.Keys) {
+        $reservedPorts = $script:Config.RESERVED_PORTS[$service]
         
         # Se for um array de ranges, expanda cada range
         if ($reservedPorts -is [array]) {
@@ -1307,7 +1307,7 @@ function Get-NextAvailablePort {
     )
     
     $currentPort = $StartPort
-    $maxAttempts = 100  # Evita loop infinito
+    $maxAttempts = $script:Config.MaxPortAttempts  # Evita loop infinito
     $attempts = 0
     
     while ($attempts -lt $maxAttempts) {
@@ -1411,7 +1411,7 @@ catch {
 Write-InfoMessage "Procurando portas disponiveis..."
 
 # WordPress - tenta a partir da porta 8000
-$wpPort = Get-NextAvailablePort -StartPort 8000 -PortType "WordPress"
+$wpPort = Get-NextAvailablePort -StartPort $script:Config.DefaultStartPort -PortType "WordPress"
 if (-not (Test-PortRange -Port $wpPort -PortType "WordPress")) {
     exit 1
 }
